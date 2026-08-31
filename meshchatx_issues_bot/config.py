@@ -96,6 +96,10 @@ class Settings:
     admin_display_names: dict[str, str]
     require_identity_verification: bool
     test_mode: bool
+    autopeer_propagation: bool
+    autopeer_maxdepth: int
+    propagation_node: str | None
+    direct_delivery_retries: int
 
     def admin_display_name(self, admin_hash: str) -> str:
         from meshchatx_issues_bot.identity import display_name_for_address
@@ -154,6 +158,10 @@ class Settings:
                 True,
             ),
             test_mode=_env_bool("TEST_MODE", False),
+            autopeer_propagation=_env_bool("AUTOPEER_PROPAGATION", True),
+            autopeer_maxdepth=_env_int("AUTOPEER_MAXDEPTH", 4),
+            propagation_node=_env("PROPAGATION_NODE") or None,
+            direct_delivery_retries=_env_int("DIRECT_DELIVERY_RETRIES", 2),
         )
 
     def cmd(self, name: str) -> str:

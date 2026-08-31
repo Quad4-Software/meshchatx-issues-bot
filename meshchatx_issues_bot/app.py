@@ -27,15 +27,34 @@ def build_app() -> AppContext:
         "signature_verification_enabled": settings.require_identity_verification,
         "require_message_signatures": False,
         "test_mode": settings.test_mode,
+        "opportunistic_sending": True,
+        "propagation_fallback_enabled": True,
+        "autopeer_propagation": settings.autopeer_propagation,
+        "autopeer_maxdepth": settings.autopeer_maxdepth,
+        "direct_delivery_retries": settings.direct_delivery_retries,
     }
     if settings.reticulum_config_dir:
         bot_kwargs["reticulum_config_dir"] = settings.reticulum_config_dir
     if settings.stamp_cost is not None:
         bot_kwargs["stamp_cost"] = settings.stamp_cost
+    if settings.propagation_node:
+        bot_kwargs["propagation_node"] = settings.propagation_node
 
     bot = LXMFBot(**bot_kwargs)
     if not settings.test_mode:
         apply_stamp_policy(bot, settings)
+        if settings.autopeer_propagation:
+            print(
+                "LXMF autopeer propagation: "
+                f"enabled (max depth {settings.autopeer_maxdepth})",
+            )
+        elif settings.propagation_node:
+            print(f"LXMF propagation node: {settings.propagation_node}")
+        else:
+            print(
+                "Warning: no LXMF propagation configured. "
+                "Replies may fail when a live path is unavailable.",
+            )
 
     icon = IconAppearance(
         icon_name="bug_report",

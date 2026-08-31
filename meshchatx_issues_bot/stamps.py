@@ -7,14 +7,19 @@ def apply_stamp_policy(bot, settings: Settings) -> None:
         return
 
     cost = settings.stamp_cost
-    bot.config.stamp_cost = cost
 
     if cost is None:
+        bot.config.stamp_cost = None
         bot.router.set_inbound_stamp_cost(bot.local.hash, None)
+        wrap_bot_outbound(bot, settings)
         return
 
     if not bot.router.set_inbound_stamp_cost(bot.local.hash, cost):
         print(f"Warning: could not set inbound stamp cost to {cost}")
+
+    # Keep inbound cost on the router only. Clearing config.stamp_cost stops
+    # LXMFy from generating expensive stamps on every outbound reply.
+    bot.config.stamp_cost = None
 
     try:
         bot.local.announce()

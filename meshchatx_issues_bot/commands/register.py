@@ -19,6 +19,16 @@ def register_blocked_middleware(app: AppContext) -> None:
 
     @bot.on_message()
     def reject_blocked(sender, message):
+        # Refresh reverse path while the inbound delivery proves reachability
+        try:
+            import RNS
+
+            dest = bytes.fromhex(sender) if isinstance(sender, str) else None
+            if dest is not None and not RNS.Transport.has_path(dest):
+                RNS.Transport.request_path(dest)
+        except Exception:
+            pass
+
         h = app.blocks.is_blocked(sender)
         if not h:
             return False
