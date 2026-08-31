@@ -28,6 +28,19 @@ uv run meshchatx-issues-bot
 
 The bot prints its LXMF address on startup. Message that address from MeshChatX, Sideband, or another LXMF client.
 
+## Development
+
+```bash
+uv sync
+uv run ruff check .
+uv run ruff format .
+uv run pytest
+```
+
+Set `TEST_MODE=true` to run the bot with LXMFy test mode (in-memory storage, no stamp policy side effects).
+
+CI runs lint and tests on `master` pushes and pull requests. Actions are pinned to full commit SHAs. Dependabot keeps Actions and Python deps current.
+
 ## Configuration
 
 Most behavior is controlled via environment variables. See `.env.example` for the full list.
@@ -39,8 +52,9 @@ Most behavior is controlled via environment variables. See `.env.example` for th
 | `ADMIN_LXMF` | Admins (commands + optional notifications) |
 | `NOTIFY_LXMF` | Who receives new reports (defaults to `ADMIN_LXMF`) |
 | `CMD_*` | Rename commands without changing code |
-| `STAMP_COST` | LXMF stamps required to message the bot (default `8`, `0` disables) |
+| `STAMP_COST` | LXMF stamps required to message the bot (default `8`, `0`/`none`/`off` disables) |
 | `GRANT_ADMIN_TICKETS` | Give `ADMIN_LXMF` / `NOTIFY_LXMF` reply tickets so they can message without stamping |
+| `TEST_MODE` | Enable LXMFy test mode for local/dev runs |
 
 ## Commands
 
@@ -54,3 +68,7 @@ Use `/update <id> [more text]` on an open issue to append text and/or attach mor
 Attach files, images, or audio to the same LXMF message as `report` or `update`; they are stored and forwarded to admins (see `FORWARD_ATTACHMENTS` and size limits in `.env.example`).
 
 After a report, the user receives their LXMF hash and an issue id. Admins receive the full report including the reporter’s LXMF address, then each attachment as separate LXMF messages.
+
+## License
+
+[0BSD](LICENSE)

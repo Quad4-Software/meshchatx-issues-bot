@@ -1,3 +1,5 @@
+from contextlib import suppress
+
 from lxmfy.events import EventPriority
 
 from meshchatx_issues_bot.context import AppContext
@@ -22,10 +24,8 @@ def register_identity_gate(app: AppContext) -> None:
             return
 
         event.cancel()
-        try:
+        with suppress(Exception):
             bot.send(
                 sender,
                 "Message rejected: could not verify sender identity.",
             )
-        except Exception:
-            pass

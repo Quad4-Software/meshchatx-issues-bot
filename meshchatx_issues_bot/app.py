@@ -19,13 +19,14 @@ def build_app() -> AppContext:
         "admins": set(settings.admin_hashes),
         "command_prefix": settings.command_prefix,
         "cogs_enabled": False,
-        "storage_type": "json",
+        "storage_type": "json" if not settings.test_mode else "memory",
         "storage_path": settings.storage_path,
         "rate_limit": settings.rate_limit,
         "cooldown": settings.cooldown,
         "first_message_enabled": settings.first_message_enabled,
         "signature_verification_enabled": settings.require_identity_verification,
         "require_message_signatures": False,
+        "test_mode": settings.test_mode,
     }
     if settings.reticulum_config_dir:
         bot_kwargs["reticulum_config_dir"] = settings.reticulum_config_dir
@@ -33,7 +34,8 @@ def build_app() -> AppContext:
         bot_kwargs["stamp_cost"] = settings.stamp_cost
 
     bot = LXMFBot(**bot_kwargs)
-    apply_stamp_policy(bot, settings)
+    if not settings.test_mode:
+        apply_stamp_policy(bot, settings)
 
     icon = IconAppearance(
         icon_name="bug_report",

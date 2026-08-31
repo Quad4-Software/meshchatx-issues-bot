@@ -57,12 +57,14 @@ def parse_incoming(
         att = _parse_image_item(image_val)
         if att is not None:
             parsed.append(att)
+            remaining -= 1
 
     audio_val = fields.get(LXMF.LXMF.FIELD_AUDIO)
     if audio_val is not None and remaining > 0:
         att = _parse_audio_item(audio_val)
         if att is not None:
             parsed.append(att)
+            remaining -= 1
 
     return _enforce_size_limit(parsed, settings.max_attachment_bytes)
 

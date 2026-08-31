@@ -1,4 +1,5 @@
 import time
+from typing import Any, Protocol
 
 from meshchatx_issues_bot.lxmf_hash import normalize_lxmf_hash
 from meshchatx_issues_bot.models import Issue, IssueAttachment
@@ -8,8 +9,16 @@ _ISSUE_PREFIX = "issue:"
 _BLOCKED_KEY = "blocked_hashes"
 
 
+class KeyValueStorage(Protocol):
+    def get(self, key: str, default: Any = None) -> Any: ...
+
+    def set(self, key: str, value: Any) -> None: ...
+
+    def scan(self, prefix: str) -> list[str]: ...
+
+
 class IssueStore:
-    def __init__(self, storage):
+    def __init__(self, storage: KeyValueStorage):
         self._storage = storage
 
     def create(
@@ -114,7 +123,7 @@ class IssueStore:
 
 
 class BlockStore:
-    def __init__(self, storage):
+    def __init__(self, storage: KeyValueStorage):
         self._storage = storage
 
     def _load(self) -> set[str]:

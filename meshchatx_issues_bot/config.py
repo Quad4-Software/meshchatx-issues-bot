@@ -95,6 +95,7 @@ class Settings:
     ticket_recipients: frozenset[str]
     admin_display_names: dict[str, str]
     require_identity_verification: bool
+    test_mode: bool
 
     def admin_display_name(self, admin_hash: str) -> str:
         from meshchatx_issues_bot.identity import display_name_for_address
@@ -152,6 +153,7 @@ class Settings:
                 "REQUIRE_IDENTITY_VERIFICATION",
                 True,
             ),
+            test_mode=_env_bool("TEST_MODE", False),
         )
 
     def cmd(self, name: str) -> str:

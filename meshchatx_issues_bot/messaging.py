@@ -1,6 +1,5 @@
 import RNS
 from LXMF import LXMessage
-
 from lxmfy.signatures import sign_outgoing_message
 
 from meshchatx_issues_bot.config import Settings

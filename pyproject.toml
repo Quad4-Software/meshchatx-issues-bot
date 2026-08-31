@@ -13,9 +13,77 @@ dependencies = [
 [project.scripts]
 meshchatx-issues-bot = "meshchatx_issues_bot.bot:run"
 
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-cov>=6.0",
+    "ruff>=0.11",
+]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["meshchatx_issues_bot"]
+
+[tool.uv]
+default-groups = ["dev"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = [
+    "-q",
+    "--strict-markers",
+    "--cov=meshchatx_issues_bot",
+    "--cov-report=term-missing",
+    "--cov-fail-under=70",
+]
+filterwarnings = [
+    "error",
+    "ignore::DeprecationWarning",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["meshchatx_issues_bot"]
+omit = [
+    "meshchatx_issues_bot/__main__.py",
+    "meshchatx_issues_bot/bot.py",
+    "meshchatx_issues_bot/messaging.py",
+    "meshchatx_issues_bot/stamps.py",
+    "meshchatx_issues_bot/identity.py",
+    "meshchatx_issues_bot/commands/user.py",
+    "meshchatx_issues_bot/commands/admin.py",
+    "meshchatx_issues_bot/commands/register.py",
+    "meshchatx_issues_bot/commands/identity_gate.py",
+    "meshchatx_issues_bot/notify.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+src = ["meshchatx_issues_bot", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "UP",
+    "B",
+    "SIM",
+    "RUF",
+]
+ignore = [
+    "E501",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["B018"]

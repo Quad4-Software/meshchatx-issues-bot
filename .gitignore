@@ -9,6 +9,13 @@ wheels/
 # Virtual environments
 .venv
 
+# Tooling caches
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+coverage.xml
+
 # Bot runtime data
 data/
 config/

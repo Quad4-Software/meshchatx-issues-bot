@@ -128,9 +128,11 @@ def verify_sender(
     id_hash = identity_hash_hex(identity)
     delivery_hash = delivery_hash_hex(identity) or claimed
 
-    if settings.require_identity_verification:
-        if not _cryptographic_verify(message, identity):
-            return False, delivery_hash, id_hash
+    if settings.require_identity_verification and not _cryptographic_verify(
+        message,
+        identity,
+    ):
+        return False, delivery_hash, id_hash
 
     return True, delivery_hash, id_hash
 
