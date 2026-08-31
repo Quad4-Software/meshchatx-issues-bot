@@ -2,6 +2,7 @@
 name = "meshchatx-issues-bot"
 version = "0.1.0"
 description = "LXMF issues bot for Reticulum with admin notifications"
+license = "0BSD"
 requires-python = ">=3.12"
 dependencies = [
     "lxmfy>=2.0.1",
