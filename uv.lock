@@ -283,16 +283,16 @@ wheels = [
 
 [[package]]
 name = "lxmfy"
-version = "2.0.1"
+version = "2.0.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cbor2" },
     { name = "lxmf" },
     { name = "rns" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/41/0a/f954e5df18e9e13b400331269b2fb23c7adb631f145b261b4f9bcc1b59d5/lxmfy-2.0.1.tar.gz", hash = "sha256:631145931b13ec617831b5cd778cbd4b80e21e66d327a47f0b824c8c0f6160f9", size = 74513, upload-time = "2026-07-21T20:50:26.919Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d9/6c/5ce1f9c70d2c0f9446513fe9fceafd15d22ea41aa10acf5b48f8b7478c44/lxmfy-2.0.3.tar.gz", hash = "sha256:f8029d60e518c5d3609990e6d3270ad9d0ac73400e09097a9bc588f66718ce5b", size = 95187, upload-time = "2026-09-01T10:09:54.804Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d5/6a/a60b5b82925b9e6097db48adb53a88562a5658355fd3545c9f80cadbc3e9/lxmfy-2.0.1-py3-none-any.whl", hash = "sha256:afdc107147ac2a40249c4c2e9cde1d9a0126ef1d0de95a6f780e477d171e59f7", size = 84812, upload-time = "2026-07-21T20:50:25.84Z" },
+    { url = "https://files.pythonhosted.org/packages/61/8e/35dcbf5da449a3f5e513418495b5b721a9468ccec79751aa03c24d4e5900/lxmfy-2.0.3-py3-none-any.whl", hash = "sha256:95ffcab1d4b277222bb90c4695c0d905ed945d3a05f98748aa5abdd14dd9be36", size = 106396, upload-time = "2026-09-01T10:09:53.758Z" },
 ]
 
 [[package]]
@@ -314,7 +314,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "lxmfy", specifier = ">=2.0.1" },
+    { name = "lxmfy", specifier = ">=2.0.3" },
     { name = "python-dotenv", specifier = ">=1.2.2" },
     { name = "rns", specifier = ">=1.5.2" },
 ]

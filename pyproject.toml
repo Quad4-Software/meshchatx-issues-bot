@@ -5,7 +5,7 @@ description = "LXMF issues bot for Reticulum with admin notifications"
 license = "0BSD"
 requires-python = ">=3.12"
 dependencies = [
-    "lxmfy>=2.0.1",
+    "lxmfy>=2.0.3",
     "python-dotenv>=1.2.2",
     "rns>=1.5.2",
 ]
