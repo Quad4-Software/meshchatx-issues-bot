@@ -149,7 +149,7 @@ class Settings:
             forward_attachments=_env_bool("FORWARD_ATTACHMENTS", True),
             max_attachments_per_issue=_env_int("MAX_ATTACHMENTS_PER_ISSUE", 5),
             max_attachment_bytes=_env_int("MAX_ATTACHMENT_BYTES", 5_242_880),
-            stamp_cost=_env_stamp_cost("STAMP_COST", 8),
+            stamp_cost=_env_stamp_cost("STAMP_COST", 6),
             grant_admin_tickets=_env_bool("GRANT_ADMIN_TICKETS", True),
             ticket_recipients=ticket_recipients,
             admin_display_names=_parse_admin_names(_env("ADMIN_NAMES")),

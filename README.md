@@ -52,7 +52,7 @@ Most behavior is controlled via environment variables. See `.env.example` for th
 | `ADMIN_LXMF` | Admins (commands + optional notifications) |
 | `NOTIFY_LXMF` | Who receives new reports (defaults to `ADMIN_LXMF`) |
 | `CMD_*` | Rename commands without changing code |
-| `STAMP_COST` | LXMF stamps required to message the bot (default `8`, `0`/`none`/`off` disables) |
+| `STAMP_COST` | LXMF stamps required to message the bot (default `6`, `0`/`none`/`off` disables) |
 | `GRANT_ADMIN_TICKETS` | Give `ADMIN_LXMF` / `NOTIFY_LXMF` reply tickets so they can message without stamping |
 | `TEST_MODE` | Enable LXMFy test mode for local/dev runs |
 

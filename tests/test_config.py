@@ -7,7 +7,7 @@ def test_from_env_defaults(settings: Settings):
     assert settings.command_prefix == "/"
     assert settings.admin_hashes == frozenset({ADMIN_HASH})
     assert settings.notify_hashes == frozenset({ADMIN_HASH, ADMIN2_HASH})
-    assert settings.stamp_cost == 8
+    assert settings.stamp_cost == 6
     assert settings.test_mode is True
     assert settings.cmd("report") == "/report"
 

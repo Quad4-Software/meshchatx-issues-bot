@@ -24,7 +24,7 @@ def settings(monkeypatch: pytest.MonkeyPatch, tmp_path) -> Settings:
     monkeypatch.setenv("NOTIFY_LXMF", f"{ADMIN_HASH},{ADMIN2_HASH}")
     monkeypatch.setenv("STORAGE_PATH", str(tmp_path))
     monkeypatch.setenv("COMMAND_PREFIX", "/")
-    monkeypatch.setenv("STAMP_COST", "8")
+    monkeypatch.setenv("STAMP_COST", "6")
     monkeypatch.setenv("GRANT_ADMIN_TICKETS", "true")
     monkeypatch.setenv("REQUIRE_IDENTITY_VERIFICATION", "false")
     monkeypatch.setenv("TEST_MODE", "true")
