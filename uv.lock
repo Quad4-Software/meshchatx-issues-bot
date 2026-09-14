@@ -412,15 +412,15 @@ wheels = [
 
 [[package]]
 name = "rns"
-version = "1.5.2"
+version = "1.5.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cryptography" },
     { name = "pyserial" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/7e/fb/d7b0b67c0e369b8533fe14688cb2b65bff21c669b0c776759015ad3d1830/rns-1.5.2.tar.gz", hash = "sha256:a7f8f0d445312fee1c4ade41178f5224fe7af8bd790a79d148696659d81cc862", size = 545972, upload-time = "2026-08-29T02:19:08.694Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/91/15/517d2e63e876a677088673853f9c947340cd2056716328f3ba4e888ae47c/rns-1.5.4.tar.gz", hash = "sha256:578508ef08dedf7c109f73a445065ca89c50a63c6a69ced7b147ed20391ceb15", size = 549347, upload-time = "2026-09-11T15:02:28.119Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c4/b9/8ee411771187f32cd88003420aafea3955008bf8ccbfa421517d3c3d99de/rns-1.5.2-py3-none-any.whl", hash = "sha256:56da2ec26f103a074ad546edee2b2eeb949b24f1f74399f294e08027e238a471", size = 631363, upload-time = "2026-08-29T02:19:04.395Z" },
+    { url = "https://files.pythonhosted.org/packages/0f/30/ed9aa31b3f03a2dd5ff376c3fcb734f8a15c59956825bf373ab73d9fc8c2/rns-1.5.4-py3-none-any.whl", hash = "sha256:862615b12d449750c0b3c451dfc2cb189fd6da1c573c477a29f36f97d2a66a19", size = 636698, upload-time = "2026-09-11T15:02:24.329Z" },
 ]
 
 [[package]]
