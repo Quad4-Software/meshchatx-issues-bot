@@ -3,7 +3,44 @@ from lxmfy.attachments import pack_attachment
 from meshchatx_issues_bot.attachments import to_lxmfy_attachment
 from meshchatx_issues_bot.config import Settings
 from meshchatx_issues_bot.messaging import deliver_message, should_include_ticket
-from meshchatx_issues_bot.models import Issue
+from meshchatx_issues_bot.models import Issue, IssueAttachment
+
+
+def _send_or_hold(
+    bot,
+    settings: Settings,
+    pending,
+    dest: str,
+    text: str,
+    *,
+    title: str,
+    attachment: IssueAttachment | None = None,
+) -> bool:
+    fields = None
+    if attachment is not None:
+        packed = to_lxmfy_attachment(attachment, settings)
+        if packed is None:
+            return False
+        fields = pack_attachment(packed)
+
+    def fail():
+        pending.add(
+            dest,
+            title,
+            text,
+            attachments=[attachment.to_dict()] if attachment else None,
+        )
+
+    return deliver_message(
+        bot,
+        settings,
+        dest,
+        text,
+        title=title,
+        lxmf_fields=fields,
+        include_ticket=should_include_ticket(dest, settings),
+        on_failure=fail if pending is not None else None,
+    )
 
 
 def format_admin_message(issue: Issue) -> str:
@@ -49,6 +86,7 @@ def notify_admins_issue_updated(
     update_text: str | None,
     new_attachments: list,
     icon_field=None,
+    pending=None,
 ) -> tuple[int, int, list[str]]:
     names = [a.name for a in new_attachments]
     text = format_admin_update(
@@ -61,13 +99,13 @@ def notify_admins_issue_updated(
     failures: list[str] = []
 
     for admin_hash in settings.notify_hashes:
-        sent = deliver_message(
+        sent = _send_or_hold(
             bot,
             settings,
+            pending,
             admin_hash,
             text,
             title=f"Issue #{issue.id} update",
-            include_ticket=should_include_ticket(admin_hash, settings),
         )
         if sent:
             admins_sent += 1
@@ -75,29 +113,48 @@ def notify_admins_issue_updated(
             failures.append(admin_hash)
             print(
                 f"Could not send issue #{issue.id} update to {admin_hash} "
-                "(destination unknown; try messaging the bot once from that client)",
+                "(queued for retry once reachable)",
             )
 
         if not settings.forward_attachments:
             continue
 
         for meta in new_attachments:
-            attachment = to_lxmfy_attachment(meta, settings)
-            if attachment is None:
-                continue
             body = f"Issue #{issue.id} update: {meta.name}"
-            if deliver_message(
+            if _send_or_hold(
                 bot,
                 settings,
+                pending,
                 admin_hash,
                 body,
                 title=f"Issue #{issue.id} file",
-                lxmf_fields=pack_attachment(attachment),
-                include_ticket=should_include_ticket(admin_hash, settings),
+                attachment=meta,
             ):
                 attachments_sent += 1
 
     return admins_sent, attachments_sent, failures
+
+
+def notify_admins_text(
+    bot,
+    settings: Settings,
+    text: str,
+    *,
+    title: str,
+    pending=None,
+) -> int:
+    sent = 0
+    for admin_hash in settings.notify_hashes:
+        if _send_or_hold(
+            bot,
+            settings,
+            pending,
+            admin_hash,
+            text,
+            title=title,
+        ):
+            sent += 1
+    return sent
 
 
 def notify_admins(
@@ -106,6 +163,7 @@ def notify_admins(
     issue: Issue,
     *,
     icon_field=None,
+    pending=None,
 ) -> tuple[int, int, list[str]]:
     text = format_admin_message(issue)
     admins_sent = 0
@@ -113,13 +171,13 @@ def notify_admins(
     failures: list[str] = []
 
     for admin_hash in settings.notify_hashes:
-        sent = deliver_message(
+        sent = _send_or_hold(
             bot,
             settings,
+            pending,
             admin_hash,
             text,
             title=f"Issue #{issue.id}",
-            include_ticket=should_include_ticket(admin_hash, settings),
         )
         if sent:
             admins_sent += 1
@@ -127,32 +185,52 @@ def notify_admins(
             failures.append(admin_hash)
             print(
                 f"Could not send issue #{issue.id} alert to {admin_hash} "
-                "(destination unknown; try messaging the bot once from that client)",
+                "(queued for retry once reachable)",
             )
 
         if not settings.forward_attachments or not issue.attachments:
             continue
 
         for meta in issue.attachments:
-            attachment = to_lxmfy_attachment(meta, settings)
-            if attachment is None:
-                print(f"Issue #{issue.id}: missing attachment file {meta.path}")
-                continue
             body = f"Issue #{issue.id} attachment: {meta.name}"
-            if deliver_message(
+            if _send_or_hold(
                 bot,
                 settings,
+                pending,
                 admin_hash,
                 body,
                 title=f"Issue #{issue.id} file",
-                lxmf_fields=pack_attachment(attachment),
-                include_ticket=should_include_ticket(admin_hash, settings),
+                attachment=meta,
             ):
                 attachments_sent += 1
             else:
                 print(f"Could not forward {meta.name} to {admin_hash}")
 
     return admins_sent, attachments_sent, failures
+
+
+def notify_reporter(
+    bot,
+    settings: Settings,
+    issue: Issue,
+    text: str,
+    *,
+    title: str,
+    pending=None,
+) -> bool:
+    def fail():
+        if pending is not None:
+            pending.add(issue.reporter, title, text)
+
+    return deliver_message(
+        bot,
+        settings,
+        issue.reporter,
+        text,
+        title=title,
+        include_ticket=False,
+        on_failure=fail if pending is not None else None,
+    )
 
 
 def format_close_notice(
@@ -175,6 +253,7 @@ def notify_issue_closed(
     *,
     closer_hash: str,
     closer_label: str,
+    pending=None,
 ) -> bool:
     if issue.reporter == closer_hash:
         return True
@@ -183,11 +262,11 @@ def notify_issue_closed(
         closer_label=closer_label,
         closer_address=closer_hash,
     )
-    return deliver_message(
+    return notify_reporter(
         bot,
         settings,
-        issue.reporter,
+        issue,
         text,
         title=f"Issue #{issue.id} closed",
-        include_ticket=False,
+        pending=pending,
     )

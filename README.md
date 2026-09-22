@@ -48,7 +48,7 @@ Most behavior is controlled via environment variables. See `.env.example` for th
 | Variable | Purpose |
 |----------|---------|
 | `BOT_NAME` | Display name on the network |
-| `COMMAND_PREFIX` | `/` by default; leave empty for no prefix |
+| `COMMAND_PREFIX` | `/` by default, leave empty for no prefix |
 | `ADMIN_LXMF` | Admins (commands + optional notifications) |
 | `NOTIFY_LXMF` | Who receives new reports (defaults to `ADMIN_LXMF`) |
 | `CMD_*` | Rename commands without changing code |
@@ -58,16 +58,16 @@ Most behavior is controlled via environment variables. See `.env.example` for th
 
 ## Commands
 
-**Users:** `report`, `update`, `myissues`, `issue`, `whoami`
-**Admins:** `issues`, `close`, `block`, `unblock`, `blocked`
+**Users:** `report`, `update`, `myissues`, `issue`, `close` (own issues), `whoami`
+**Admins:** `issues`, `close`, `reopen`, `reply`, `block`, `unblock`, `blocked`
 
 Example: `/report Cannot reach settings after update`
 
-Use `/update <id> [more text]` on an open issue to append text and/or attach more files to the same message. Updates notify admins with only the new content and new attachments.
+Attach files, images, or audio to the same LXMF message as `report` or `update`, or send them later with no command. Files and notes sent with no command go to your latest open issue. Start the message with `#<id>` to pick a different issue, or send `#<id>` alone to view it. Stored attachments are forwarded to admins (see `FORWARD_ATTACHMENTS` and the size, count and rate limits in `.env.example`).
 
-Attach files, images, or audio to the same LXMF message as `report` or `update`; they are stored and forwarded to admins (see `FORWARD_ATTACHMENTS` and size limits in `.env.example`).
+Use `/update <id> [more text]` on an open issue to append text. Updates notify admins with only the new content and new attachments.
 
-After a report, the user receives their LXMF hash and an issue id. Admins receive the full report including the reporter’s LXMF address, then each attachment as separate LXMF messages.
+After a report, the user receives their LXMF hash and an issue id. Admins receive the full report including the reporter's LXMF address, then each attachment as separate LXMF messages.
 
 ## License
 

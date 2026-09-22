@@ -74,7 +74,7 @@ def test_confirmations(settings: Settings):
         settings=settings,
         notify_failures=["b" * 32],
     )
-    assert "could not be delivered" in report
+    assert "queued for retry" in report
     assert "Attachments saved: 1" in report
 
     update = format_update_confirmation(
@@ -96,4 +96,4 @@ def test_confirmations(settings: Settings):
         settings=settings,
         notify_failures=["b" * 32],
     )
-    assert "could not be delivered" in quiet
+    assert "queued for retry" in quiet

@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from lxmfy import LXMFBot
 
 from meshchatx_issues_bot.config import Settings
+from meshchatx_issues_bot.pending import PendingStore
 from meshchatx_issues_bot.store import BlockStore, IssueStore
 
 
@@ -12,4 +13,5 @@ class AppContext:
     settings: Settings
     issues: IssueStore
     blocks: BlockStore
+    pending: PendingStore
     icon_field: object | None

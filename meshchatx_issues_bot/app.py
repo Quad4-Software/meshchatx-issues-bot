@@ -1,8 +1,14 @@
 from lxmfy import IconAppearance, LXMFBot, pack_icon_appearance_field
 
 from meshchatx_issues_bot.commands import register_commands
+from meshchatx_issues_bot.compat import fix_delivery_link_callback
 from meshchatx_issues_bot.config import Settings
 from meshchatx_issues_bot.context import AppContext
+from meshchatx_issues_bot.pending import (
+    PendingAnnounceHandler,
+    PendingStore,
+    start_flush_thread,
+)
 from meshchatx_issues_bot.stamps import apply_stamp_policy
 from meshchatx_issues_bot.store import BlockStore, IssueStore
 
@@ -32,6 +38,7 @@ def build_app() -> AppContext:
         "autopeer_propagation": settings.autopeer_propagation,
         "autopeer_maxdepth": settings.autopeer_maxdepth,
         "direct_delivery_retries": settings.direct_delivery_retries,
+        "announce_enabled": settings.announce_seconds >= 60,
     }
     if settings.reticulum_config_dir:
         bot_kwargs["reticulum_config_dir"] = settings.reticulum_config_dir
@@ -68,7 +75,18 @@ def build_app() -> AppContext:
         settings=settings,
         issues=IssueStore(bot.storage),
         blocks=BlockStore(bot.storage),
+        pending=PendingStore(bot.storage),
         icon_field=icon_field,
     )
+
+    if not settings.test_mode:
+        import RNS
+
+        fix_delivery_link_callback(bot)
+        RNS.Transport.register_announce_handler(
+            PendingAnnounceHandler(bot, settings, app.pending),
+        )
+        start_flush_thread(bot, settings, app.pending)
+
     register_commands(app)
     return app

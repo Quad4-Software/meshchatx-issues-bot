@@ -85,11 +85,16 @@ class Settings:
     cmd_block: str
     cmd_unblock: str
     cmd_blocked: str
+    cmd_reply: str
+    cmd_reopen: str
     list_issues_limit: int
     max_issue_body: int
     forward_attachments: bool
     max_attachments_per_issue: int
     max_attachment_bytes: int
+    max_issue_attachment_bytes: int
+    inbox_rate_limit: int
+    inbox_rate_window: int
     stamp_cost: int | None
     grant_admin_tickets: bool
     ticket_recipients: frozenset[str]
@@ -144,11 +149,19 @@ class Settings:
             cmd_block=_env("CMD_BLOCK", "block"),
             cmd_unblock=_env("CMD_UNBLOCK", "unblock"),
             cmd_blocked=_env("CMD_BLOCKED", "blocked"),
+            cmd_reply=_env("CMD_REPLY", "reply"),
+            cmd_reopen=_env("CMD_REOPEN", "reopen"),
             list_issues_limit=_env_int("LIST_ISSUES_LIMIT", 20),
             max_issue_body=_env_int("MAX_ISSUE_BODY", 4000),
             forward_attachments=_env_bool("FORWARD_ATTACHMENTS", True),
             max_attachments_per_issue=_env_int("MAX_ATTACHMENTS_PER_ISSUE", 5),
             max_attachment_bytes=_env_int("MAX_ATTACHMENT_BYTES", 5_242_880),
+            max_issue_attachment_bytes=_env_int(
+                "MAX_ISSUE_ATTACHMENT_BYTES",
+                26_214_400,
+            ),
+            inbox_rate_limit=_env_int("INBOX_RATE_LIMIT", 20),
+            inbox_rate_window=_env_int("INBOX_RATE_WINDOW", 3600),
             stamp_cost=_env_stamp_cost("STAMP_COST", 6),
             grant_admin_tickets=_env_bool("GRANT_ADMIN_TICKETS", True),
             ticket_recipients=ticket_recipients,
@@ -173,8 +186,12 @@ class Settings:
         warnings: list[str] = []
         if not self.notify_hashes:
             warnings.append(
-                "NOTIFY_LXMF / ADMIN_LXMF is empty; no admins will receive reports.",
+                "NOTIFY_LXMF / ADMIN_LXMF is empty, no admins will receive reports.",
             )
         if not self.admin_hashes:
-            warnings.append("ADMIN_LXMF is empty; admin commands will be unusable.")
+            warnings.append("ADMIN_LXMF is empty, admin commands will be unusable.")
+        if 0 < self.announce_seconds < 60:
+            warnings.append(
+                "ANNOUNCE_SECONDS below 60 is not supported by lxmfy, announces disabled.",
+            )
         return warnings

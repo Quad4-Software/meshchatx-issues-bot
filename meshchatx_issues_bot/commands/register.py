@@ -1,6 +1,7 @@
 from meshchatx_issues_bot.commands.admin import register_admin_commands
 from meshchatx_issues_bot.commands.help import register_help
 from meshchatx_issues_bot.commands.identity_gate import register_identity_gate
+from meshchatx_issues_bot.commands.inbox import message_is_actionable, register_inbox
 from meshchatx_issues_bot.commands.user import register_user_commands
 from meshchatx_issues_bot.context import AppContext
 
@@ -8,6 +9,7 @@ from meshchatx_issues_bot.context import AppContext
 def register_commands(app: AppContext) -> None:
     register_identity_gate(app)
     register_blocked_middleware(app)
+    register_inbox(app)
     register_welcome(app)
     register_user_commands(app)
     register_admin_commands(app)
@@ -60,7 +62,7 @@ def register_welcome(app: AppContext) -> None:
     settings = app.settings
 
     @bot.on_first_message()
-    def welcome(sender, _message):
+    def welcome(sender, message):
         if app.blocks.is_blocked(sender):
             bot.send(
                 sender,
@@ -76,13 +78,21 @@ def register_welcome(app: AppContext) -> None:
         text = (
             f"{settings.bot_name}\n\n"
             f"{stamp_note}"
-            f"{settings.cmd(settings.cmd_report)} <description>\n"
-            "(attach files or images to the same message)\n"
+            f"{settings.cmd(settings.cmd_report)} <description> - file an issue\n"
+            "Send files, images or notes any time to add them to your "
+            "latest open issue. Start the message with #<id> to pick one.\n"
             f"{settings.cmd(settings.cmd_update)} <id> [more text]\n"
-            f"{settings.cmd(settings.cmd_myissues)}\n"
-            f"{settings.cmd(settings.cmd_issue)} <id>\n"
-            f"whoami - your address\n"
-            f"{settings.cmd('help')} - commands"
+            f"{settings.cmd(settings.cmd_myissues)} - your issues\n"
+            f"{settings.cmd('help')} - all commands"
         )
         bot.send(sender, text, lxmf_fields=app.icon_field)
-        return True
+        content = ""
+        raw = getattr(message, "content", None)
+        if isinstance(raw, (bytes, bytearray)):
+            content = bytes(raw).decode("utf-8", errors="replace").strip()
+        return not message_is_actionable(
+            bot,
+            settings.command_prefix,
+            message,
+            content,
+        )

@@ -1,4 +1,9 @@
-from meshchatx_issues_bot.attachments import parse_incoming, save_for_issue
+from meshchatx_issues_bot.attachments import (
+    fit_byte_budget,
+    has_attachments,
+    parse_incoming,
+    save_for_issue,
+)
 from meshchatx_issues_bot.commands.helpers import (
     parse_report_body,
     parse_update_args,
@@ -52,7 +57,8 @@ def register_user_commands(app: AppContext) -> None:
                 ctx,
                 app,
                 f"Usage: {settings.cmd(settings.cmd_report)} <description>\n"
-                "Attach files or images to the same message.",
+                "Attach files to the same message, or send them after "
+                "in a follow-up message.",
             )
             return
 
@@ -77,12 +83,14 @@ def register_user_commands(app: AppContext) -> None:
                 start_index=0,
             )
             app.issues.save(issue)
+        app.issues.set_active(reporter, issue.id)
 
         admins_notified, attachments_forwarded, failures = notify_admins(
             bot,
             settings,
             issue,
             icon_field=app.icon_field,
+            pending=app.pending,
         )
 
         admin_copy = None
@@ -122,7 +130,8 @@ def register_user_commands(app: AppContext) -> None:
                 ctx,
                 app,
                 f"Usage: {settings.cmd(settings.cmd_update)} <id> [more text]\n"
-                "Attach files or images to the same message.",
+                "Or send files with no command to attach them to your "
+                "latest open issue.",
             )
             return
 
@@ -145,13 +154,28 @@ def register_user_commands(app: AppContext) -> None:
             if settings.forward_attachments
             else []
         )
+        if incoming and issue_existing is not None:
+            used = sum(a.size for a in issue_existing.attachments)
+            budget = max(0, settings.max_issue_attachment_bytes - used)
+            incoming = fit_byte_budget(incoming, budget)
 
         if not add_text and not incoming:
+            if has_attachments(lxmf_message):
+                reply(
+                    ctx,
+                    app,
+                    "Nothing was attached: the files exceed this issue's "
+                    f"limits ({settings.max_attachments_per_issue} files, "
+                    f"{settings.max_attachment_bytes} bytes each, "
+                    f"{settings.max_issue_attachment_bytes} bytes total).",
+                )
+                return
             reply(
                 ctx,
                 app,
                 f"Usage: {settings.cmd(settings.cmd_update)} <id> [more text]\n"
-                "Attach files or images to the same message.",
+                "Or send files with no command to attach them to your "
+                "latest open issue.",
             )
             return
 
@@ -207,6 +231,7 @@ def register_user_commands(app: AppContext) -> None:
         if err == "closed":
             reply(ctx, app, f"Issue #{issue_id} is closed and cannot be updated.")
             return
+        app.issues.set_active(reporter, issue_id)
 
         admins_notified, _attachments_forwarded, failures = notify_admins_issue_updated(
             bot,
@@ -215,6 +240,7 @@ def register_user_commands(app: AppContext) -> None:
             update_text=update_block,
             new_attachments=new_attachments,
             icon_field=app.icon_field,
+            pending=app.pending,
         )
 
         reply(

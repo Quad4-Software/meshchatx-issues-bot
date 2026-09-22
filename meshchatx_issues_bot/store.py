@@ -7,6 +7,7 @@ from meshchatx_issues_bot.models import Issue, IssueAttachment
 _COUNTER_KEY = "issue_counter"
 _ISSUE_PREFIX = "issue:"
 _BLOCKED_KEY = "blocked_hashes"
+_ACTIVE_PREFIX = "active_issue:"
 
 
 class KeyValueStorage(Protocol):
@@ -89,6 +90,32 @@ class IssueStore:
         issue.closed_by = closed_by
         issue.close_message = close_message.strip() or "closed"
         self._storage.set(f"{_ISSUE_PREFIX}{issue_id}", issue.to_dict())
+        return issue
+
+    def set_active(self, reporter: str, issue_id: int) -> None:
+        h = normalize_lxmf_hash(reporter)
+        if h:
+            self._storage.set(f"{_ACTIVE_PREFIX}{h}", int(issue_id))
+
+    def active_issue(self, reporter: str) -> int | None:
+        h = normalize_lxmf_hash(reporter)
+        if not h:
+            return None
+        raw = self._storage.get(f"{_ACTIVE_PREFIX}{h}")
+        try:
+            return int(raw)
+        except (TypeError, ValueError):
+            return None
+
+    def reopen(self, issue_id: int) -> Issue | None:
+        issue = self.get(issue_id)
+        if issue is None or issue.status != "closed":
+            return None
+        issue.status = "open"
+        issue.closed_at = None
+        issue.closed_by = None
+        issue.close_message = None
+        self.save(issue)
         return issue
 
     def append_to_issue(

@@ -16,6 +16,11 @@ def _user_commands(settings) -> list[tuple[str, str, str]]:
             f"{settings.cmd(settings.cmd_update)} <id> [more text]",
         ),
         (
+            settings.cmd_close,
+            "Close your own issue",
+            f"{settings.cmd(settings.cmd_close)} <id> [message]",
+        ),
+        (
             settings.cmd_myissues,
             "List your issues",
             settings.cmd(settings.cmd_myissues),
@@ -39,8 +44,18 @@ def _admin_commands(settings) -> list[tuple[str, str, str]]:
         ),
         (
             settings.cmd_close,
-            "Close an issue and notify the reporter",
+            "Close any issue and notify the reporter",
             f"{settings.cmd(settings.cmd_close)} <id> [message]",
+        ),
+        (
+            settings.cmd_reopen,
+            "Reopen a closed issue",
+            f"{settings.cmd(settings.cmd_reopen)} <id>",
+        ),
+        (
+            settings.cmd_reply,
+            "Message an issue's reporter",
+            f"{settings.cmd(settings.cmd_reply)} <id> <message>",
         ),
         (
             settings.cmd_block,
@@ -102,5 +117,10 @@ def register_help(app: AppContext) -> None:
                 lines.append(f"  {usage} - {desc}")
 
         lines.append("")
+        lines.append(
+            "Tip: send files or images with no command to attach them to "
+            "your latest open issue. Start the message with #<id> to pick "
+            "a different one.",
+        )
         lines.append(f"Details: {settings.cmd('help')} <command>")
         reply(ctx, app, "\n".join(lines))

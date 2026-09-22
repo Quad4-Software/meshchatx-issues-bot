@@ -3,7 +3,11 @@ from meshchatx_issues_bot.context import AppContext
 from meshchatx_issues_bot.formatting import format_issue_list, issue_preview
 from meshchatx_issues_bot.identity import display_name_for_address, is_verified_admin
 from meshchatx_issues_bot.lxmf_hash import normalize_lxmf_hash
-from meshchatx_issues_bot.notify import notify_issue_closed
+from meshchatx_issues_bot.notify import (
+    notify_admins_text,
+    notify_issue_closed,
+    notify_reporter,
+)
 
 
 def _require_admin(ctx, app: AppContext) -> bool:
@@ -47,12 +51,10 @@ def register_admin_commands(app: AppContext) -> None:
 
     @bot.command(
         name=settings.cmd_close,
-        description="Close an issue and notify the reporter",
+        description="Close an issue (admins, or the reporter for their own)",
         threaded=True,
     )
     def close_command(ctx):
-        if not _require_admin(ctx, app):
-            return
         closer = sender_hash(ctx)
         if not closer:
             reply(ctx, app, "Could not determine your address.")
@@ -73,6 +75,12 @@ def register_admin_commands(app: AppContext) -> None:
         if issue is None:
             reply(ctx, app, f"Issue #{issue_id} not found.")
             return
+
+        admin = is_verified_admin(ctx, app.settings)
+        if not admin and issue.reporter != closer:
+            reply(ctx, app, "You can only close your own issues.")
+            return
+
         if issue.status == "closed":
             reply(
                 ctx,
@@ -94,6 +102,7 @@ def register_admin_commands(app: AppContext) -> None:
             issue,
             closer_hash=closer,
             closer_label=closer_label,
+            pending=app.pending,
         )
 
         preview = issue_preview(issue)
@@ -106,8 +115,19 @@ def register_admin_commands(app: AppContext) -> None:
                 lines.append(f"Reporter notified ({issue.reporter}).")
             else:
                 lines.append(
-                    f"Could not notify reporter ({issue.reporter}); no path yet.",
+                    f"Reporter unreachable ({issue.reporter}), notification queued.",
                 )
+        elif not admin:
+            admins_told = notify_admins_text(
+                bot,
+                settings,
+                f"Issue #{issue.id} closed by reporter {closer}\n\n"
+                f"Resolution: {issue.close_message}",
+                title=f"Issue #{issue.id} closed",
+                pending=app.pending,
+            )
+            if admins_told:
+                lines.append(f"Admins notified: {admins_told}.")
         reply(ctx, app, "\n".join(lines))
 
     @bot.command(
@@ -164,6 +184,104 @@ def register_admin_commands(app: AppContext) -> None:
             return
         lines = ["Blocked addresses:", ""]
         lines.extend(blocked)
+        reply(ctx, app, "\n".join(lines))
+
+    @bot.command(
+        name=settings.cmd_reply,
+        description="Send a message to an issue's reporter",
+        threaded=True,
+    )
+    def reply_command(ctx):
+        if not _require_admin(ctx, app):
+            return
+        if len(ctx.args) < 2:
+            reply(
+                ctx,
+                app,
+                f"Usage: {settings.cmd(settings.cmd_reply)} <id> <message>",
+            )
+            return
+        try:
+            issue_id = int(ctx.args[0])
+        except ValueError:
+            reply(ctx, app, "Issue id must be a number.")
+            return
+        message = " ".join(ctx.args[1:]).strip()
+        if not message:
+            reply(
+                ctx,
+                app,
+                f"Usage: {settings.cmd(settings.cmd_reply)} <id> <message>",
+            )
+            return
+
+        issue = app.issues.get(issue_id)
+        if issue is None:
+            reply(ctx, app, f"Issue #{issue_id} not found.")
+            return
+
+        sender = sender_hash(ctx)
+        sender_label = display_name_for_address(sender, settings) if sender else "admin"
+        text = f"Re: your issue #{issue.id}\nFrom: {sender_label}\n\n{message}"
+        delivered = notify_reporter(
+            bot,
+            settings,
+            issue,
+            text,
+            title=f"Issue #{issue.id} reply",
+            pending=app.pending,
+        )
+        if delivered:
+            reply(ctx, app, f"Reply sent to {issue.reporter} for issue #{issue.id}.")
+        else:
+            reply(
+                ctx,
+                app,
+                f"Reporter unreachable ({issue.reporter}), reply queued for retry.",
+            )
+
+    @bot.command(
+        name=settings.cmd_reopen,
+        description="Reopen a closed issue and notify the reporter",
+        threaded=True,
+    )
+    def reopen_command(ctx):
+        if not _require_admin(ctx, app):
+            return
+        if not ctx.args:
+            reply(ctx, app, f"Usage: {settings.cmd(settings.cmd_reopen)} <id>")
+            return
+        try:
+            issue_id = int(ctx.args[0])
+        except ValueError:
+            reply(ctx, app, "Issue id must be a number.")
+            return
+
+        existing = app.issues.get(issue_id)
+        if existing is None:
+            reply(ctx, app, f"Issue #{issue_id} not found.")
+            return
+        if existing.status != "closed":
+            reply(ctx, app, f"Issue #{issue_id} is not closed.")
+            return
+
+        issue = app.issues.reopen(issue_id)
+        sender = sender_hash(ctx)
+        lines = [f"Reopened issue #{issue.id}: {issue_preview(issue)}"]
+        if sender and issue.reporter != sender:
+            if notify_reporter(
+                bot,
+                settings,
+                issue,
+                f"Your issue #{issue.id} has been reopened.",
+                title=f"Issue #{issue.id} reopened",
+                pending=app.pending,
+            ):
+                lines.append(f"Reporter notified ({issue.reporter}).")
+            else:
+                lines.append(
+                    f"Reporter unreachable ({issue.reporter}), notification queued.",
+                )
         reply(ctx, app, "\n".join(lines))
 
     @bot.command(

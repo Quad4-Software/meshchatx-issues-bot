@@ -81,7 +81,7 @@ def format_update_confirmation(
     if admins_notified:
         parts.append(f"Admins notified: {admins_notified}.")
     elif notify_failures:
-        parts.append("Admin alert could not be delivered (no path to admin yet).")
+        parts.append("Admin alert queued for retry (admins not reachable yet).")
     parts.append(f"View with {settings.cmd(settings.cmd_issue)} {issue.id}")
     return "\n".join(parts)
 
@@ -102,13 +102,14 @@ def format_report_confirmation(
     if admins_notified:
         lines.append(f"Admins notified: {admins_notified}")
     elif notify_failures:
-        lines.append("Admin alert could not be delivered (no path to admin yet).")
+        lines.append("Admin alert queued for retry (admins not reachable yet).")
     if issue.attachments:
         lines.append(
             f"Attachments saved: {len(issue.attachments)}"
             f" ({attachments_forwarded} forwarded to admins)",
         )
     lines.append(f"View with {settings.cmd(settings.cmd_issue)} {issue.id}")
+    lines.append("Send more files or notes any time to add them to this issue.")
     if admin_copy:
         lines.extend(["", admin_copy])
     return "\n".join(lines)

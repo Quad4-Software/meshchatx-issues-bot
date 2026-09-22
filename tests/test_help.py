@@ -15,6 +15,7 @@ def test_command_catalogs(settings: Settings):
 
 def test_find_command(settings: Settings):
     assert _find_command("report", settings, include_admin=False) is not None
-    assert _find_command("close", settings, include_admin=False) is None
-    assert _find_command("close", settings, include_admin=True) is not None
+    assert _find_command("close", settings, include_admin=False) is not None
+    assert _find_command("block", settings, include_admin=False) is None
+    assert _find_command("block", settings, include_admin=True) is not None
     assert _find_command("nope", settings, include_admin=True) is None

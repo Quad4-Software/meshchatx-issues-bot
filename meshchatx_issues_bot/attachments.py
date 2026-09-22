@@ -10,6 +10,11 @@ from meshchatx_issues_bot.config import Settings
 from meshchatx_issues_bot.models import IssueAttachment
 
 _UNSAFE_NAME = re.compile(r"[^a-zA-Z0-9._-]+")
+_ATTACHMENT_FIELDS = (
+    LXMF.LXMF.FIELD_FILE_ATTACHMENTS,
+    LXMF.LXMF.FIELD_IMAGE,
+    LXMF.LXMF.FIELD_AUDIO,
+)
 
 
 @dataclass
@@ -28,6 +33,11 @@ def message_fields(message) -> dict:
         return fields if isinstance(fields, dict) else {}
     raw = getattr(message, "fields", None)
     return raw if isinstance(raw, dict) else {}
+
+
+def has_attachments(message) -> bool:
+    fields = message_fields(message)
+    return any(fields.get(key) is not None for key in _ATTACHMENT_FIELDS)
 
 
 def parse_incoming(
@@ -115,6 +125,18 @@ def _safe_name(name: str) -> str:
     base = os.path.basename(name.strip()) or "file"
     cleaned = _UNSAFE_NAME.sub("_", base)
     return cleaned[:120] or "file"
+
+
+def fit_byte_budget(
+    items: list[ParsedAttachment],
+    budget: int,
+) -> list[ParsedAttachment]:
+    kept: list[ParsedAttachment] = []
+    for item in items:
+        if len(item.data) <= budget:
+            kept.append(item)
+            budget -= len(item.data)
+    return kept
 
 
 def _enforce_size_limit(

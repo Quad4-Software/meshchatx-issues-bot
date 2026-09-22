@@ -60,6 +60,7 @@ def deliver_message(
     stamp_cost: int | None = None,
     include_ticket: bool = False,
     opportunistic: bool | None = None,
+    on_failure=None,
 ) -> bool:
     """Send an LXMF message, optionally attaching an admin stamp ticket.
 
@@ -92,9 +93,11 @@ def deliver_message(
     if identity_instance is None:
         RNS.Transport.request_path(dest_hash_bytes)
         RNS.log(
-            f"No identity for {destination}; reply deferred until announce",
+            f"No identity for {destination}, reply deferred until announce",
             RNS.LOG_WARNING,
         )
+        if on_failure is not None:
+            on_failure()
         return False
 
     has_path = _ensure_path(dest_hash_bytes, destination)
@@ -140,6 +143,8 @@ def deliver_message(
             f"method={desired_method})",
             RNS.LOG_WARNING,
         )
+        if on_failure is not None:
+            on_failure()
 
     lxm.register_delivery_callback(on_delivery_success)
     lxm.register_failed_callback(on_delivery_failure)
@@ -161,6 +166,8 @@ def deliver_message(
             f"Failed to queue message for {destination}: outbound queue full",
             RNS.LOG_ERROR,
         )
+        if on_failure is not None:
+            on_failure()
         return False
 
     RNS.log(
@@ -173,7 +180,7 @@ def deliver_message(
 
 
 def wrap_bot_outbound(bot, settings: Settings) -> None:
-    """Prefer LXMFy opportunistic send; only custom-path when tickets are needed."""
+    """Prefer LXMFy opportunistic send, only custom-path when tickets are needed."""
     original_send = bot.send
     bot._original_send = original_send
 
@@ -186,6 +193,7 @@ def wrap_bot_outbound(bot, settings: Settings) -> None:
         include_ticket=None,
         opportunistic=None,
         method=None,
+        on_failure=None,
     ):
         use_ticket = (
             include_ticket
@@ -210,6 +218,7 @@ def wrap_bot_outbound(bot, settings: Settings) -> None:
                 stamp_cost=stamp_cost,
                 include_ticket=True,
                 opportunistic=opportunistic,
+                on_failure=on_failure,
             )
         return original_send(
             destination,
